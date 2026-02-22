@@ -146,6 +146,11 @@ export const quizzesApi = {
     }),
 };
 
+export const aiApi = {
+  ask: (body: { question: string }) =>
+    apiFetch<{ answer: string }>('/ai/ask', { method: 'POST', body: JSON.stringify(body) }),
+};
+
 // Hadiths
 export const hadithsApi = {
   get: (id: string) => apiFetch<Hadith>(`/hadiths/${id}`),

@@ -20,6 +20,10 @@ const pages = [
     detail: 'Play approved games within the time limits set by your family.',
   },
   {
+    title: 'AI Helper',
+    detail: 'Ask questions and get kid-friendly answers based on your age.',
+  },
+  {
     title: 'Messages',
     detail: 'Chat with family members for support, updates, and encouragement.',
   },
@@ -79,6 +83,7 @@ export default function InstructionsPage() {
           <li>Open Home and review your tasks/quizzes.</li>
           <li>Complete your highest-priority task first.</li>
           <li>Do one learning activity from Quizzes (lesson + flashcards + quiz).</li>
+          <li>Use AI Helper when you need a quick explanation, then confirm with a parent.</li>
           <li>Send updates or questions through Messages/Requests.</li>
           <li>Use Journal to reflect before ending your day.</li>
         </ol>

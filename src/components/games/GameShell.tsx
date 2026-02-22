@@ -126,9 +126,9 @@ export function GameShell({ game, GameComponent, onClose }: GameShellProps) {
         {state === 'limit_reached' && (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-4">
             <div className="text-6xl">⏰</div>
-            <h2 className="text-2xl font-bold text-gray-800">Time's Up!</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Time&apos;s Up!</h2>
             <p className="text-gray-500 max-w-xs">
-              You've used all your game time for today. Come back tomorrow for more fun!
+              You&apos;ve used all your game time for today. Come back tomorrow for more fun!
             </p>
             <p className="text-amber-600 font-medium text-sm">
               Remember: learning comes first! 📚
@@ -146,7 +146,7 @@ export function GameShell({ game, GameComponent, onClose }: GameShellProps) {
         {state === 'error' && (
           <div className="flex flex-col items-center justify-center h-full p-8 text-center gap-4">
             <div className="text-5xl">😕</div>
-            <h2 className="text-xl font-bold text-gray-800">Couldn't Start Game</h2>
+            <h2 className="text-xl font-bold text-gray-800">Couldn&apos;t Start Game</h2>
             <p className="text-gray-500">Something went wrong. Please try again!</p>
             <button
               onClick={() => { setState('loading'); void initSession(); }}

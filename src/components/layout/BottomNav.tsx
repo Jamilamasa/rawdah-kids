@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Bell,
   LogOut,
+  Sparkles,
   X,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -39,6 +40,7 @@ const mainNav: NavItem[] = [
 ];
 
 const moreNav = [
+  { label: 'AI Helper', href: '/ai', icon: <Sparkles size={20} /> },
   { label: 'Rewards', href: '/rewards', icon: <Gift size={20} /> },
   { label: 'Instructions', href: '/instructions', icon: <BookText size={20} /> },
   { label: 'Messages', href: '/messages', icon: <MessageCircle size={20} /> },
@@ -67,6 +69,7 @@ export function BottomNav() {
   );
 
   const moreActive = [
+    '/ai',
     '/rewards',
     '/instructions',
     '/messages',
