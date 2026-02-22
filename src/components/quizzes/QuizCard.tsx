@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Star, CheckCircle, Clock, BookOpen } from 'lucide-react';
 import { cn, getScoreColor, getScoreEmoji } from '@/lib/utils';
-import type { HadithQuiz, ProphetQuiz, QuranQuiz } from '@/types';
+import type { HadithQuiz, ProphetQuiz, QuranQuiz, TopicQuiz } from '@/types';
 
-type AnyQuiz = HadithQuiz | ProphetQuiz | QuranQuiz;
+type AnyQuiz = HadithQuiz | ProphetQuiz | QuranQuiz | TopicQuiz;
 
 interface QuizCardProps {
   quiz: AnyQuiz;
-  type: 'hadith' | 'prophet' | 'quran';
+  type: 'hadith' | 'prophet' | 'quran' | 'topic';
   index?: number;
 }
 
@@ -18,6 +18,7 @@ const TYPE_LABELS = {
   hadith: { label: 'Hadith Quiz', icon: '📜', color: 'bg-amber-50 text-amber-700' },
   prophet: { label: 'Prophet Quiz', icon: '🌟', color: 'bg-blue-50 text-blue-700' },
   quran: { label: 'Quran Quiz', icon: '📖', color: 'bg-green-50 text-green-700' },
+  topic: { label: 'Topic Quiz', icon: '🧠', color: 'bg-fuchsia-50 text-fuchsia-700' },
 };
 
 const STATUS_CONFIG = {

@@ -8,6 +8,13 @@ export type TaskStatus =
   | 'reward_declined';
 export type QuizStatus = 'pending' | 'memorizing' | 'in_progress' | 'completed';
 export type Difficulty = 'easy' | 'medium' | 'hard';
+export type TopicCategory =
+  | 'hadith'
+  | 'quran'
+  | 'science'
+  | 'fun_facts'
+  | 'custom'
+  | 'general';
 export type Theme =
   | 'forest'
   | 'ocean'
@@ -76,6 +83,24 @@ export interface Reward {
   created_at: string;
 }
 
+export interface DueReward {
+  task_id: string;
+  task_title: string;
+  task_description?: string;
+  task_status: Extract<TaskStatus, 'reward_requested' | 'reward_approved'>;
+  task_due_date?: string;
+  task_completed_at?: string;
+  task_created_at: string;
+  child_id: string;
+  child_name: string;
+  reward_id: string;
+  reward_title: string;
+  reward_description?: string;
+  reward_value: number;
+  reward_type: 'virtual' | 'real' | 'monetary';
+  reward_icon?: string;
+}
+
 export interface QuizQuestion {
   id: string;
   question: string;
@@ -88,6 +113,11 @@ export interface QuizAnswer {
   question_id: string;
   selected_answer: string;
   is_correct: boolean;
+}
+
+export interface Flashcard {
+  front: string;
+  back: string;
 }
 
 export interface HadithQuiz {
@@ -127,6 +157,24 @@ export interface QuranQuiz {
   verse_id: string;
   lesson_id?: string;
   assigned_to: string;
+  questions: QuizQuestion[];
+  answers?: QuizAnswer[];
+  score?: number;
+  xp_awarded: number;
+  status: QuizStatus;
+  completed_at?: string;
+  created_at: string;
+}
+
+export interface TopicQuiz {
+  id: string;
+  family_id: string;
+  assigned_to: string;
+  assigned_by: string;
+  category: TopicCategory;
+  topic: string;
+  lesson_content: string;
+  flashcards: Flashcard[];
   questions: QuizQuestion[];
   answers?: QuizAnswer[];
   score?: number;

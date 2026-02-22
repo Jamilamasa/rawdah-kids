@@ -8,7 +8,8 @@ import {
   Brain,
   Gamepad2,
   MoreHorizontal,
-  BookOpen,
+  BookText,
+  Gift,
   MessageCircle,
   FileText,
   HelpCircle,
@@ -38,7 +39,8 @@ const mainNav: NavItem[] = [
 ];
 
 const moreNav = [
-  { label: 'Learn', href: '/learn', icon: <BookOpen size={20} /> },
+  { label: 'Rewards', href: '/rewards', icon: <Gift size={20} /> },
+  { label: 'Instructions', href: '/instructions', icon: <BookText size={20} /> },
   { label: 'Messages', href: '/messages', icon: <MessageCircle size={20} /> },
   { label: 'Journal', href: '/rants', icon: <FileText size={20} /> },
   { label: 'Requests', href: '/requests', icon: <HelpCircle size={20} /> },
@@ -59,13 +61,19 @@ export function BottomNav() {
     () =>
       (quizzes?.hadith_quizzes?.filter((q) => q.status !== 'completed').length ?? 0) +
       (quizzes?.prophet_quizzes?.filter((q) => q.status !== 'completed').length ?? 0) +
-      (quizzes?.quran_quizzes?.filter((q) => q.status !== 'completed').length ?? 0),
+      (quizzes?.quran_quizzes?.filter((q) => q.status !== 'completed').length ?? 0) +
+      (quizzes?.topic_quizzes?.filter((q) => q.status !== 'completed').length ?? 0),
     [quizzes]
   );
 
-  const moreActive = ['/learn', '/messages', '/rants', '/requests', '/notifications'].some(
-    (p) => pathname.startsWith(p)
-  );
+  const moreActive = [
+    '/rewards',
+    '/instructions',
+    '/messages',
+    '/rants',
+    '/requests',
+    '/notifications',
+  ].some((p) => pathname.startsWith(p));
 
   const handleSignOut = useCallback(async () => {
     setSigningOut(true);

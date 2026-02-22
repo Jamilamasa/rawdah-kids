@@ -39,7 +39,7 @@ export function useCreateRant() {
 export function useUpdateRant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, body }: { id: string; body: { title?: string; content?: string } }) =>
+    mutationFn: ({ id, body }: { id: string; body: { title?: string; content: string; password?: string } }) =>
       rantsApi.update(id, body),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['rants'] });

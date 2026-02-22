@@ -8,7 +8,7 @@ export default function QuizzesLoading() {
         <div className="h-4 bg-white/60 rounded-xl w-48" />
       </div>
       <div className="flex gap-2 mb-4">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="h-10 flex-1 bg-white/60 rounded-xl animate-pulse" />
         ))}
       </div>

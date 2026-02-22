@@ -2,21 +2,39 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, CheckCircle, XCircle, Clock, ChevronRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Loader2,
+  XCircle,
+} from 'lucide-react';
 import { cn, getScoreColor, getScoreEmoji } from '@/lib/utils';
 import { useStartQuiz, useSubmitQuiz } from '@/hooks/useQuizzes';
 import { XPPopup } from '@/components/shared/XPPopup';
 import { toast } from 'sonner';
-import type { HadithQuiz, ProphetQuiz, QuranQuiz, QuizAnswer, QuizQuestion } from '@/types';
+import type {
+  Flashcard,
+  HadithQuiz,
+  ProphetQuiz,
+  QuranQuiz,
+  QuizAnswer,
+  QuizQuestion,
+  TopicQuiz,
+} from '@/types';
 
-type AnyQuiz = HadithQuiz | ProphetQuiz | QuranQuiz;
+type AnyQuiz = HadithQuiz | ProphetQuiz | QuranQuiz | TopicQuiz;
 
 type QuizState = 'reading' | 'answering' | 'reviewing' | 'complete';
 
 interface QuizTakerProps {
   quiz: AnyQuiz;
   type: string;
-  hadithText?: string;
+  lesson?: QuizLesson;
+  flashcards?: Flashcard[];
+  lessonLoading?: boolean;
 }
 
 interface AnsweredQuestion {
@@ -25,19 +43,28 @@ interface AnsweredQuestion {
   isCorrect: boolean;
 }
 
-export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
+export interface QuizLesson {
+  title: string;
+  subtitle?: string;
+  primaryText?: string;
+  secondaryText?: string;
+  helperText?: string;
+}
+
+export function QuizTaker({
+  quiz,
+  type,
+  lesson,
+  flashcards = [],
+  lessonLoading = false,
+}: QuizTakerProps) {
   const router = useRouter();
   const startQuiz = useStartQuiz();
   const submitQuiz = useSubmitQuiz();
 
   const [quizState, setQuizState] = useState<QuizState>(() => {
     if (quiz.status === 'completed') return 'complete';
-    if (
-      type === 'hadith' &&
-      (quiz as HadithQuiz).memorize_until &&
-      quiz.status === 'pending'
-    )
-      return 'reading';
+    if (quiz.status === 'pending') return 'reading';
     return 'answering';
   });
 
@@ -45,7 +72,17 @@ export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
   const [answered, setAnswered] = useState<AnsweredQuestion[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [memorizeTimer, setMemorizeTimer] = useState(120); // 2 min memorize
+  const [flashcardIndex, setFlashcardIndex] = useState(0);
+  const [showFlashcardBack, setShowFlashcardBack] = useState(false);
+  const initialMemorizeTimer = useMemo(() => {
+    if (type !== 'hadith') return 0;
+    const memorizeUntil = (quiz as HadithQuiz).memorize_until;
+    if (!memorizeUntil) return 0;
+    const remainingSeconds = Math.floor((new Date(memorizeUntil).getTime() - Date.now()) / 1000);
+    return Math.max(0, remainingSeconds);
+  }, [quiz, type]);
+
+  const [memorizeTimer, setMemorizeTimer] = useState(initialMemorizeTimer);
   const [showXP, setShowXP] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [xpEarned, setXpEarned] = useState(0);
@@ -56,6 +93,15 @@ export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
       setFinalScore(quiz.score);
     }
   }, [quiz]);
+
+  useEffect(() => {
+    setMemorizeTimer(initialMemorizeTimer);
+  }, [initialMemorizeTimer]);
+
+  useEffect(() => {
+    setFlashcardIndex(0);
+    setShowFlashcardBack(false);
+  }, [quiz.id]);
 
   // Memorize timer countdown
   useEffect(() => {
@@ -69,13 +115,18 @@ export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
 
   const questions: QuizQuestion[] = useMemo(() => quiz.questions ?? [], [quiz.questions]);
   const currentQuestion = questions[currentQ];
+  const currentFlashcard = useMemo(
+    () => flashcards[Math.min(flashcardIndex, Math.max(0, flashcards.length - 1))],
+    [flashcardIndex, flashcards]
+  );
 
   const handleStartAnswering = useCallback(async () => {
+    if (lessonLoading) return;
     if (quiz.status === 'pending') {
       await startQuiz.mutateAsync({ type, id: quiz.id });
     }
     setQuizState('answering');
-  }, [quiz.status, quiz.id, type, startQuiz]);
+  }, [lessonLoading, quiz.status, quiz.id, type, startQuiz]);
 
   const handleSelectAnswer = useCallback(
     (option: string) => {
@@ -138,6 +189,7 @@ export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
 
   // Reading / Memorize State
   if (quizState === 'reading') {
+    const showTimer = memorizeTimer > 0;
     return (
       <div className="px-4 py-6 flex flex-col min-h-[60vh]">
         <button
@@ -148,33 +200,119 @@ export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
         </button>
         <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-gray-800 text-lg">Read & Memorize</h2>
-            <div
-              className={cn(
-                'flex items-center gap-1 text-sm font-medium px-3 py-1 rounded-full',
-                memorizeTimer < 30 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'
-              )}
-            >
-              <Clock size={14} />
-              {formatTime(memorizeTimer)}
-            </div>
+            <h2 className="font-bold text-gray-800 text-lg">Learn First</h2>
+            {showTimer ? (
+              <div
+                className={cn(
+                  'flex items-center gap-1 text-sm font-medium px-3 py-1 rounded-full',
+                  memorizeTimer < 30 ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'
+                )}
+              >
+                <Clock size={14} />
+                {formatTime(memorizeTimer)}
+              </div>
+            ) : null}
           </div>
-          {hadithText && (
-            <div className="bg-amber-50 rounded-xl p-4 mb-3 border border-amber-100">
-              <p className="text-gray-800 leading-relaxed text-base">{hadithText}</p>
+
+          {lessonLoading ? (
+            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Loader2 size={16} className="animate-spin" />
+                Loading lesson...
+              </div>
+            </div>
+          ) : lesson ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                <p className="text-base font-semibold text-gray-800">{lesson.title}</p>
+                {lesson.subtitle ? <p className="mt-1 text-sm text-gray-600">{lesson.subtitle}</p> : null}
+              </div>
+
+              {lesson.primaryText ? (
+                <div className="rounded-xl border border-gray-100 bg-white p-4">
+                  <p className="text-base leading-relaxed text-gray-800">{lesson.primaryText}</p>
+                </div>
+              ) : null}
+
+              {lesson.secondaryText ? (
+                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                  <p className="text-sm leading-relaxed text-blue-800">{lesson.secondaryText}</p>
+                </div>
+              ) : null}
+
+              {lesson.helperText ? (
+                <p className="text-sm text-gray-500">{lesson.helperText}</p>
+              ) : null}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-sm text-gray-600">
+                Read the lesson carefully, then continue to the quiz.
+              </p>
             </div>
           )}
-          <p className="text-sm text-gray-500">
-            Read this carefully before starting the quiz. Take your time to understand it.
-          </p>
+
+          {flashcards.length > 0 && currentFlashcard ? (
+            <div className="mt-4 space-y-3 rounded-xl border border-fuchsia-100 bg-fuchsia-50 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-fuchsia-900">Flashcards</p>
+                <p className="text-xs font-medium text-fuchsia-700">
+                  {flashcardIndex + 1} / {flashcards.length}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowFlashcardBack((prev) => !prev)}
+                className="w-full rounded-xl border border-fuchsia-200 bg-white p-4 text-left"
+              >
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.08em] text-fuchsia-600">
+                  {showFlashcardBack ? 'Answer' : 'Prompt'}
+                </p>
+                <p className="text-sm leading-relaxed text-fuchsia-900">
+                  {showFlashcardBack ? currentFlashcard.back : currentFlashcard.front}
+                </p>
+                <p className="mt-2 text-xs text-fuchsia-700">
+                  Tap to {showFlashcardBack ? 'show prompt' : 'reveal answer'}
+                </p>
+              </button>
+
+              <div className="flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFlashcardIndex((prev) => Math.max(0, prev - 1));
+                    setShowFlashcardBack(false);
+                  }}
+                  disabled={flashcardIndex === 0}
+                  className="inline-flex items-center gap-1 rounded-lg border border-fuchsia-200 bg-white px-3 py-2 text-xs font-semibold text-fuchsia-800 disabled:opacity-50"
+                >
+                  <ChevronLeft size={14} />
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFlashcardIndex((prev) => Math.min(flashcards.length - 1, prev + 1));
+                    setShowFlashcardBack(false);
+                  }}
+                  disabled={flashcardIndex >= flashcards.length - 1}
+                  className="inline-flex items-center gap-1 rounded-lg border border-fuchsia-200 bg-white px-3 py-2 text-xs font-semibold text-fuchsia-800 disabled:opacity-50"
+                >
+                  Next
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
         <button
           onClick={handleStartAnswering}
-          disabled={startQuiz.isPending}
+          disabled={startQuiz.isPending || lessonLoading}
           className="w-full py-3.5 rounded-2xl text-white font-bold text-base transition-all min-h-[52px] flex items-center justify-center gap-2"
           style={{ backgroundColor: 'hsl(var(--primary))' }}
         >
-          {startQuiz.isPending ? "Starting..." : "I'm Ready! Start Quiz"}
+          {lessonLoading ? 'Loading lesson...' : startQuiz.isPending ? 'Starting...' : "I'm Ready! Start Quiz"}
         </button>
       </div>
     );
@@ -206,7 +344,7 @@ export function QuizTaker({ quiz, type, hadithText }: QuizTakerProps) {
             {score}%
           </div>
           <p className="text-gray-500 text-sm">
-            {correctCount !== undefined
+            {answered.length > 0
               ? `${correctCount} / ${questions.length} correct`
               : `${Math.round((score / 100) * questions.length)} / ${questions.length} correct`}
           </p>

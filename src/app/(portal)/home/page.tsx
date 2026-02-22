@@ -64,7 +64,8 @@ export default function HomePage() {
     () =>
       (quizzes?.hadith_quizzes?.filter((q) => q.status !== 'completed').length ?? 0) +
       (quizzes?.prophet_quizzes?.filter((q) => q.status !== 'completed').length ?? 0) +
-      (quizzes?.quran_quizzes?.filter((q) => q.status !== 'completed').length ?? 0),
+      (quizzes?.quran_quizzes?.filter((q) => q.status !== 'completed').length ?? 0) +
+      (quizzes?.topic_quizzes?.filter((q) => q.status !== 'completed').length ?? 0),
     [quizzes]
   );
 

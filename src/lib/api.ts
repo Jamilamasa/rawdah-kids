@@ -6,16 +6,18 @@ import type {
   HadithQuiz,
   ProphetQuiz,
   QuranQuiz,
+  TopicQuiz,
   QuizAnswer,
   Hadith,
+  Prophet,
+  QuranVerse,
+  DueReward,
   AvailableGame,
   GameSession,
   Message,
-  Conversation,
   Rant,
   Request,
   Notification,
-  LearnContent,
   UserXP,
 } from '@/types';
 
@@ -104,6 +106,14 @@ export const authApi = {
 // Tasks
 export const tasksApi = {
   list: () => apiFetch<{ tasks: Task[] }>('/tasks'),
+  dueRewards: (params?: { status?: 'reward_requested' | 'reward_approved' }) => {
+    const search = new URLSearchParams();
+    if (params?.status) {
+      search.set('status', params.status);
+    }
+    const suffix = search.toString() ? `?${search.toString()}` : '';
+    return apiFetch<{ due_rewards: DueReward[] }>(`/tasks/due-rewards${suffix}`);
+  },
   get: (id: string) => apiFetch<Task>(`/tasks/${id}`),
   start: (id: string) => apiFetch<void>(`/tasks/${id}/start`, { method: 'POST' }),
   complete: (id: string) => apiFetch<void>(`/tasks/${id}/complete`, { method: 'POST' }),
@@ -118,13 +128,19 @@ export const quizzesApi = {
       hadith_quizzes: HadithQuiz[];
       prophet_quizzes: ProphetQuiz[];
       quran_quizzes: QuranQuiz[];
+      topic_quizzes: TopicQuiz[];
     }>('/quizzes/my'),
+  selfAssignHadith: (difficulty?: string) =>
+    apiFetch<HadithQuiz>('/quizzes/hadith/self', {
+      method: 'POST',
+      body: JSON.stringify({ difficulty: difficulty ?? 'easy' }),
+    }),
   get: (type: string, id: string) =>
-    apiFetch<HadithQuiz | ProphetQuiz | QuranQuiz>(`/quizzes/${type}/${id}`),
+    apiFetch<HadithQuiz | ProphetQuiz | QuranQuiz | TopicQuiz>(`/quizzes/${type}/${id}`),
   start: (type: string, id: string) =>
     apiFetch<void>(`/quizzes/${type}/${id}/start`, { method: 'POST' }),
   submit: (type: string, id: string, answers: QuizAnswer[]) =>
-    apiFetch<HadithQuiz | ProphetQuiz | QuranQuiz>(`/quizzes/${type}/${id}/submit`, {
+    apiFetch<HadithQuiz | ProphetQuiz | QuranQuiz | TopicQuiz>(`/quizzes/${type}/${id}/submit`, {
       method: 'POST',
       body: JSON.stringify({ answers }),
     }),
@@ -132,7 +148,16 @@ export const quizzesApi = {
 
 // Hadiths
 export const hadithsApi = {
+  get: (id: string) => apiFetch<Hadith>(`/hadiths/${id}`),
   learned: () => apiFetch<{ hadiths: Hadith[]; count: number }>('/hadiths/learned'),
+};
+
+export const prophetsApi = {
+  get: (id: string) => apiFetch<Prophet>(`/prophets/${id}`),
+};
+
+export const quranApi = {
+  get: (id: string) => apiFetch<QuranVerse>(`/quran/verses/${id}`),
 };
 
 // Games
@@ -149,7 +174,7 @@ export const gamesApi = {
 // Messages
 export const messagesApi = {
   conversations: () =>
-    apiFetch<{ conversations: Conversation[] }>('/messages/conversations'),
+    apiFetch<{ conversations: Message[] }>('/messages/conversations'),
   thread: (userId: string) => apiFetch<{ messages: Message[] }>(`/messages/${userId}`),
   send: (recipient_id: string, content: string) =>
     apiFetch<Message>('/messages', {
@@ -169,7 +194,7 @@ export const rantsApi = {
   },
   create: (body: { title?: string; content: string; password?: string }) =>
     apiFetch<Rant>('/rants', { method: 'POST', body: JSON.stringify(body) }),
-  update: (id: string, body: { title?: string; content?: string }) =>
+  update: (id: string, body: { title?: string; content: string; password?: string }) =>
     apiFetch<Rant>(`/rants/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   delete: (id: string) => apiFetch<void>(`/rants/${id}`, { method: 'DELETE' }),
 };
@@ -186,12 +211,6 @@ export const notificationsApi = {
   list: () => apiFetch<{ notifications: Notification[] }>('/notifications'),
   readAll: () => apiFetch<void>('/notifications/read-all', { method: 'PATCH' }),
   readOne: (id: string) => apiFetch<void>(`/notifications/${id}/read`, { method: 'PATCH' }),
-};
-
-// Learn
-export const learnApi = {
-  listMine: () => apiFetch<{ content: LearnContent[] }>('/learn/my'),
-  complete: (id: string) => apiFetch<void>(`/learn/${id}/complete`, { method: 'POST' }),
 };
 
 // XP

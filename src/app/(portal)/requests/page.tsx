@@ -1,5 +1,6 @@
 'use client';
-import { FormEvent, useState } from 'react';
+import { FormEvent } from 'react';
+import { useSessionForm } from '@/hooks/useSessionForm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { HelpCircle, PlusCircle } from 'lucide-react';
 import { requestsApi } from '@/lib/api';
@@ -10,8 +11,8 @@ import { formatRelativeTime } from '@/lib/utils';
 
 export default function RequestsPage() {
   const qc = useQueryClient();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle, clearTitle] = useSessionForm<string>('form:request-title', '');
+  const [description, setDescription, clearDescription] = useSessionForm<string>('form:request-desc', '');
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['requests'],
@@ -22,8 +23,8 @@ export default function RequestsPage() {
   const createRequest = useMutation({
     mutationFn: (body: { title: string; description?: string }) => requestsApi.create(body),
     onSuccess: () => {
-      setTitle('');
-      setDescription('');
+      clearTitle();
+      clearDescription();
       showSuccessToast('Request sent!', 'Your family can review it from their dashboard.');
       void qc.invalidateQueries({ queryKey: ['requests'] });
     },

@@ -1,7 +1,7 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { quizzesApi, hadithsApi } from '@/lib/api';
-import { showApiErrorToast } from '@/lib/toast';
+import { showApiErrorToast, showSuccessToast } from '@/lib/toast';
 import type { QuizAnswer } from '@/types';
 
 export function useMyQuizzes() {
@@ -53,6 +53,20 @@ export function useSubmitQuiz() {
     },
     onError: (error: Error) => {
       showApiErrorToast(error, 'Could not submit quiz answers. Please try again.');
+    },
+  });
+}
+
+export function useSelfAssignHadithQuiz() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (difficulty?: string) => quizzesApi.selfAssignHadith(difficulty),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['quizzes'] });
+      showSuccessToast('📜 Hadith quiz ready!', 'Start your new quiz below.');
+    },
+    onError: (error: Error) => {
+      showApiErrorToast(error, 'Could not create a hadith quiz right now. Please try again.');
     },
   });
 }
