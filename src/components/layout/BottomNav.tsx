@@ -21,6 +21,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useMyQuizzes } from '@/hooks/useQuizzes';
+import { useUnreadMessageCount } from '@/hooks/useMessages';
 import { useUnreadNotificationCount } from '@/hooks/useNotifications';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/lib/api';
@@ -57,6 +58,7 @@ export function BottomNav() {
   const [signingOut, setSigningOut] = useState(false);
 
   const { data: quizzes } = useMyQuizzes();
+  const { count: unreadMessageCount } = useUnreadMessageCount();
   const { count: notifCount } = useUnreadNotificationCount();
 
   const pendingQuizCount = useMemo(
@@ -77,6 +79,7 @@ export function BottomNav() {
     '/requests',
     '/notifications',
   ].some((p) => pathname.startsWith(p));
+  const moreBadgeCount = unreadMessageCount + notifCount;
 
   const handleSignOut = useCallback(async () => {
     setSigningOut(true);
@@ -129,6 +132,8 @@ export function BottomNav() {
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {moreNav.map((item) => {
                   const isActive = pathname.startsWith(item.href);
+                  const badgeCount =
+                    item.href === '/messages' ? unreadMessageCount : item.href === '/notifications' ? notifCount : 0;
                   return (
                     <Link
                       key={item.href}
@@ -151,9 +156,9 @@ export function BottomNav() {
                         {item.icon}
                       </span>
                       <span className="text-xs font-medium">{item.label}</span>
-                      {item.href === '/notifications' && notifCount > 0 && (
+                      {badgeCount > 0 && (
                         <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold">
-                          {notifCount > 9 ? '9+' : notifCount}
+                          {badgeCount > 9 ? '9+' : badgeCount}
                         </span>
                       )}
                     </Link>
@@ -235,9 +240,9 @@ export function BottomNav() {
               <MoreHorizontal size={22} />
             </span>
             <span className="relative z-10 text-[10px] font-medium">More</span>
-            {notifCount > 0 && !moreActive && (
+            {moreBadgeCount > 0 && !moreActive && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-white text-[9px] flex items-center justify-center font-bold z-20">
-                {notifCount > 9 ? '9+' : notifCount}
+                {moreBadgeCount > 9 ? '9+' : moreBadgeCount}
               </span>
             )}
           </button>

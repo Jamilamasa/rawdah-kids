@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { messagesApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { showApiErrorToast } from '@/lib/toast';
+import { useAuthStore } from '@/store/authStore';
 import type { Message } from '@/types';
 
 export function useConversations() {
@@ -22,6 +23,21 @@ export function useMessageThread(userId: string) {
     enabled: Boolean(userId),
     refetchInterval: 10000, // Poll every 10 seconds
   });
+}
+
+export function useUnreadMessageCount() {
+  const userId = useAuthStore((state) => state.user?.id);
+
+  const query = useQuery({
+    queryKey: ['messages', 'conversations'],
+    queryFn: () => messagesApi.conversations(),
+    enabled: Boolean(userId),
+    select: (data) =>
+      data.conversations.filter((message) => !message.read_at && message.recipient_id === userId).length,
+    refetchInterval: 30000,
+  });
+
+  return { ...query, count: query.data ?? 0 };
 }
 
 export function useSendMessage() {
