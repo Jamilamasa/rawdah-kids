@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, MessageCircle, Send } from 'lucide-react';
 import { familyApi } from '@/lib/api';
@@ -30,6 +30,7 @@ export default function MessagesPage() {
 
   const sendMessage = useSendMessage();
   const markRead = useMarkMessageRead();
+  const markedMessageIdsRef = useRef<Set<string>>(new Set());
 
   const recipients = useMemo(
     () =>
@@ -86,13 +87,18 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!threadQuery.data || !user?.id) return;
-
-    threadQuery.data
+    const unreadIds = threadQuery.data
       .filter((message) => !message.read_at && message.recipient_id === user.id)
-      .forEach((message) => {
-        markRead.mutate(message.id);
-      });
-  }, [threadQuery.data, user?.id, markRead]);
+      .map((message) => message.id)
+      .filter((id) => !markedMessageIdsRef.current.has(id));
+
+    if (!unreadIds.length) return;
+
+    unreadIds.forEach((id) => {
+      markedMessageIdsRef.current.add(id);
+      void markRead.mutateAsync(id);
+    });
+  }, [threadQuery.data, user?.id, markRead.mutateAsync]);
 
   const activeRecipientName =
     recipientOptions.find((recipient) => recipient.id === activeUserId)?.name ?? 'Conversation';
