@@ -14,8 +14,8 @@ import { showApiErrorToast } from '@/lib/toast';
 const loginSchema = z.object({
   family_slug: z
     .string()
-    .min(1, 'Family name is required')
-    .regex(/^[a-z0-9-]+$/, 'Only lowercase letters, numbers, and hyphens'),
+    .min(1, 'Family slug or name is required')
+    .max(120, 'Family slug or name is too long'),
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
@@ -39,7 +39,10 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      const result = await authApi.childSignin(data);
+      const result = await authApi.childSignin({
+        ...data,
+        family_slug: data.family_slug.trim().toLowerCase(),
+      });
       setSession(result);
       toast.success(`Welcome back, ${result.user.name}!`, {
         description: 'Your learning journey is ready.',
@@ -48,7 +51,7 @@ export function LoginForm() {
     } catch (err: unknown) {
       if (err instanceof APIError && err.status === 401) {
         toast.error('Sign-in failed', {
-          description: 'Check your family slug, username, and password.',
+          description: 'Check your family slug/name, username, and password.',
         });
       } else {
         showApiErrorToast(err, 'Could not sign in. Please try again.');
@@ -80,7 +83,7 @@ export function LoginForm() {
               htmlFor="family_slug"
               className="block text-sm font-medium text-gray-700 mb-1.5"
             >
-              Family Name
+              Family Slug or Name
             </label>
             <div className="relative">
               <Building2
@@ -92,7 +95,7 @@ export function LoginForm() {
                 {...register('family_slug')}
                 id="family_slug"
                 type="text"
-                placeholder="my-family"
+                placeholder="my-family or Jay's family"
                 autoCapitalize="none"
                 autoCorrect="off"
                 className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-800 placeholder-gray-400 transition-all"
