@@ -20,11 +20,15 @@ export function GameShell({ game, GameComponent, onClose }: GameShellProps) {
   const [elapsed, setElapsed] = useState(0);
   const startTime = useRef<number>(Date.now());
   const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const hasInitializedRef = useRef(false);
 
   const startSession = useStartGameSession();
   const endSession = useEndGameSession();
 
   const initSession = useCallback(async () => {
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     try {
       const s = await startSession.mutateAsync({
         game_name: game.id,
@@ -43,7 +47,11 @@ export function GameShell({ game, GameComponent, onClose }: GameShellProps) {
         setState('error');
       }
     }
-  }, [game, startSession]);
+  }, [game.id, game.type, startSession]);
+
+  useEffect(() => {
+    hasInitializedRef.current = false;
+  }, [game.id, game.type]);
 
   useEffect(() => {
     void initSession();
@@ -149,7 +157,11 @@ export function GameShell({ game, GameComponent, onClose }: GameShellProps) {
             <h2 className="text-xl font-bold text-gray-800">Couldn&apos;t Start Game</h2>
             <p className="text-gray-500">Something went wrong. Please try again!</p>
             <button
-              onClick={() => { setState('loading'); void initSession(); }}
+              onClick={() => {
+                hasInitializedRef.current = false;
+                setState('loading');
+                void initSession();
+              }}
               className="px-6 py-3 rounded-xl text-white font-bold"
               style={{ backgroundColor: 'hsl(var(--primary))' }}
             >

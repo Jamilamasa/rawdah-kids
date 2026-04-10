@@ -279,6 +279,36 @@ export interface Request {
   created_at: string;
 }
 
+export interface DuaSelectedName {
+  transliteration: string;
+  dua_form: string;
+  arabic: string;
+  meaning: string;
+  explanation: string;
+}
+
+export interface DuaGenerateInput {
+  asking_for: string;
+  heavy_on_heart: string;
+  afraid_of: string;
+  if_answered: string;
+  output_style: string;
+  depth: string;
+  tone: string;
+}
+
+export interface DuaGenerateResponse {
+  selected_names: DuaSelectedName[];
+  dua_text: string;
+}
+
+export interface DuaHistoryEntry extends DuaGenerateInput, DuaGenerateResponse {
+  id: string;
+  family_id: string;
+  user_id: string;
+  created_at: string;
+}
+
 export interface Notification {
   id: string;
   user_id: string;

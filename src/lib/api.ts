@@ -3,6 +3,9 @@ import type {
   User,
   Family,
   Task,
+  DuaGenerateInput,
+  DuaGenerateResponse,
+  DuaHistoryEntry,
   HadithQuiz,
   ProphetQuiz,
   QuranQuiz,
@@ -149,6 +152,17 @@ export const quizzesApi = {
 export const aiApi = {
   ask: (body: { question: string }) =>
     apiFetch<{ answer: string }>('/ai/ask', { method: 'POST', body: JSON.stringify(body) }),
+  generateDua: (body: DuaGenerateInput) =>
+    apiFetch<DuaGenerateResponse>('/dua/generate', { method: 'POST', body: JSON.stringify(body) }),
+  listDuaHistory: (params?: { limit?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.limit && params.limit > 0) {
+      search.set('limit', String(params.limit));
+    }
+    const suffix = search.toString() ? `?${search.toString()}` : '';
+    return apiFetch<{ history: DuaHistoryEntry[] }>(`/dua/history${suffix}`);
+  },
+  getDuaHistory: (id: string) => apiFetch<DuaHistoryEntry>(`/dua/history/${id}`),
 };
 
 // Hadiths
